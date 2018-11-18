@@ -4,16 +4,10 @@ from typing import IO, Optional, Tuple
 from pytest import mark
 
 from reggy.cli import Cli
+from reggy.test import StreamUtility
 
 Streams = Tuple[IO, IO, IO]
 Outputs = Tuple[str, str, str]
-
-
-class StreamUtility:
-    @staticmethod
-    def data(stream: IO) -> str:
-        stream.seek(0)
-        return ''.join([line for line in stream])
 
 
 def stream(data: Optional[str] = None, isatty: bool = False) -> IO:

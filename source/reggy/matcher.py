@@ -1,8 +1,12 @@
 import re
 from typing import Dict, List, Match, Optional, Pattern
 
+from reggy.tracer import Tracer
+
 
 class Matcher:
+
+    @Tracer.trace()
     def match(self, pattern: str, string: str) -> Optional[Dict[int, List[str]]]:
         """
         Finds tokens in the string matched with the given pattern and returns them organized by rule index. For example:
