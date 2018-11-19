@@ -1,4 +1,4 @@
-# Reggy
+# Reggy [![Build Status](https://travis-ci.com/ianbytchek/reggy.svg?branch=master)](https://travis-ci.com/ianbytchek/reggy)
 
 Reggy is a micro-utility for matching rule-identified tokens inside the given text using simple pattern syntax. Basic usage:
 
