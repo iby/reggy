@@ -42,12 +42,12 @@ class PatternTestCase:
     Represents a data set for pattern testing.
     """
 
-    def __init__(self, pattern: str, matches: [str], mismatches: [str]):
-        self.pattern = pattern
+    def __init__(self, patterns: [str], matches: [str], mismatches: [str]):
+        self.patterns = patterns
         self.matches = matches
         self.mismatches = mismatches
 
-    pattern: str
+    patterns: [str]
     matches: [str]
     mismatches: [str]
 
@@ -63,7 +63,7 @@ class PatternTestCase:
 __cli_run_test_data = [
 
     # Simple pattern.
-    PatternTestCase('foo %{0} is a %{1}', [
+    PatternTestCase(['foo %{0} is a %{1}'], [
         'foo blah is a bar',
         'foo blah is a very big boat'
     ], [
@@ -73,7 +73,7 @@ __cli_run_test_data = [
     ]),
 
     # Simple pattern with space limit modifier.
-    PatternTestCase('foo %{0} is a %{1S0}', [
+    PatternTestCase(['foo %{0} is a %{1S0}'], [
         'foo blah is a bar'
     ], [
         'foo blah is a very big boat',
@@ -83,18 +83,28 @@ __cli_run_test_data = [
     ]),
 
     # Ambiguous pattern with space limit modifier.
-    PatternTestCase('the %{0S1} %{1} ran away', [
+    PatternTestCase(['the %{0S1} %{1} ran away'], [
         'the big brown fox ran away'
     ], [
         'the big fox ran away'
     ]),
 
     # Ambiguous pattern with greedy modifier.
-    PatternTestCase('bar %{0G} foo %{1}', [
+    PatternTestCase(['bar %{0G} foo %{1}'], [
         'bar foo bar foo bar foo bar foo'
     ], [
         'bar foo bar bar bar bar bar foo'
-    ])
+    ]),
+
+    # Multiple patterns.
+    PatternTestCase(['foo %{0} is a %{1}', 'foo %{0} very %{1}'], [
+        'foo blah is a bar',
+        'foo blah very bar'
+    ], [
+        'foo blah is bar',
+        'foo blah',
+        'foo blah is'
+    ]),
 ]
 
 
@@ -105,7 +115,7 @@ def test_cli_run(case: PatternTestCase):
     """
 
     (in_stream, out_stream, err_stream) = streams(case.input())
-    code: int = Cli().run(['…', case.pattern], in_stream, out_stream, err_stream)
+    code: int = Cli().run(['…'] + case.patterns, in_stream, out_stream, err_stream)
 
     assert code == 0
     assert StreamUtility.data(out_stream) == case.output()
@@ -131,18 +141,17 @@ def test_cli_run_is_tty_friendly(is_in_tty: bool, is_out_tty: bool):
     assert string in out_stream_data if is_out_tty else string not in out_stream_data
 
 
-@mark.parametrize('argv', [[], ['foo', 'bar']])
-def test_cli_run_check_input_arguments(argv):
+def test_cli_run_check_input_arguments():
     """
-    Cli must fail if the number of arguments is not equal to one.
+    Cli must fail if it receives no arguments.
     """
 
     (in_stream, out_stream, err_stream) = streams()
-    code: int = Cli().run(['…'] + argv, in_stream, out_stream, err_stream)
+    code: int = Cli().run(['…'], in_stream, out_stream, err_stream)
 
     assert code == 1
 
     err_stream_data = StreamUtility.data(err_stream)
-    string = 'The program expects exactly one argument'
+    string = 'Reggy expects one or more matching patterns'
 
     assert string in err_stream_data

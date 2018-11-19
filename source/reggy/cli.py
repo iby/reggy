@@ -14,15 +14,14 @@ class Cli:
         """
 
         # The program expects exactly one argument – the pattern. The default first one is always the executable path.
-        if len(argv) != 2:
-            err_stream.write('The program expects exactly one argument, matching pattern. Make sure to surround\n'
-                             'it with quotes, for example:\n'
+        if len(argv) <= 1:
+            err_stream.write('Reggy expects one or more matching patterns:\n'
                              '  reggy \'foo %{0}\'\n'
-                             '  reggy \'foo %{0} baz %{1}\'\n')
+                             '  reggy \'qux %{0S3} baz\'\n')
             return 1
 
         matcher: Matcher = Matcher()
-        pattern: str = argv[1]
+        patterns: [str] = argv[1:]
 
         matched_lines: [str] = []
         line_count: int = 0
@@ -43,8 +42,12 @@ class Cli:
                 break
 
             line_count += 1
-            if matcher.match(pattern, line) is not None:
-                matched_lines.append(line)
+
+            # A line is considered matched if it gets matched least against one pattern – don't iterate beyond that point.
+            for pattern in patterns:
+                if matcher.match(pattern, line) is not None:
+                    matched_lines.append(line)
+                    break
 
         if is_out_tty:
             print(f'Matched {len(matched_lines)} lines out of total {line_count} provided.', file=out_stream)
